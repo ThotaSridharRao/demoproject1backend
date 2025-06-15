@@ -1,7 +1,6 @@
 // server.js
 
 // 1. Load environment variables from .env file
-// This line should always be at the very top of your main application file
 require('dotenv').config();
 
 // Import necessary modules
@@ -13,37 +12,49 @@ const cors = require('cors'); // For handling Cross-Origin Resource Sharing
 const app = express();
 
 // 2. Connect Database
-// Call the function to establish connection to MongoDB
 connectDB();
 
 // 3. Initialize Middleware
-// express.json() allows us to accept JSON data in the request body
 app.use(express.json({ extended: false }));
 
-// Enable CORS for all routes
-// This is crucial for your frontend (running on a different port/domain)
-// to make requests to your backend without security errors.
-app.use(cors());
+// 4. CORS Configuration (IMPORTANT for frontend communication)
+// Define the specific origins (frontend URLs) that are allowed to access your backend.
+// Replace 'https://demoproject-snz9.onrender.com' with your actual deployed frontend URL.
+// If you have multiple frontend URLs (e.g., development, staging), add them to this array.
+const allowedOrigins = [
+    'https://demoproject-snz9.onrender.com',
+    // Add other allowed origins here if you have them, e.g., 'http://localhost:3000' for local frontend dev
+];
 
-// 4. Define a simple test route
-// This is a basic GET endpoint to confirm your API is running
+app.use(cors({
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps, curl requests, or same-origin requests)
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.indexOf(origin) === -1) {
+            const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+            return callback(new Error(msg), false);
+        }
+        return callback(null, true);
+    },
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'], // Specify allowed HTTP methods
+    credentials: true, // Allow cookies to be sent
+}));
+
+
+// 5. Define a simple test route
 app.get('/', (req, res) => {
     res.send('Maosaji Honda Backend API is Running!');
 });
 
-// 5. Define Routes
-// These lines import and use the route files you've created.
-// The first argument is the base path for these routes.
+// 6. Define Routes
 app.use('/api/auth', require('./routes/api/auth'));
 app.use('/api/vehicles', require('./routes/api/vehicles'));
 app.use('/api/services', require('./routes/api/services'));
 
 // Set the port for the server to listen on
-// It will use the PORT environment variable if available (e.g., on Render),
-// otherwise, it will default to 5000.
 const PORT = process.env.PORT || 5000;
 
-// 6. Start the server
+// 7. Start the server
 app.listen(PORT, () => {
     console.log(`Server started on port ${PORT}`);
     console.log('--- Backend ready for requests ---');
