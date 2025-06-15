@@ -17,27 +17,26 @@ connectDB();
 // 3. Initialize Middleware
 app.use(express.json({ extended: false }));
 
-// 4. CORS Configuration (IMPORTANT for frontend communication)
-// Define the specific origins (frontend URLs) that are allowed to access your backend.
-// Replace 'https://demoproject-snz9.onrender.com' with your actual deployed frontend URL.
-// If you have multiple frontend URLs (e.g., development, staging), add them to this array.
 const allowedOrigins = [
-    'https://demoproject-snz9.onrender.com',
-    // Add other allowed origins here if you have them, e.g., 'http://localhost:3000' for local frontend dev
+    'https://demoproject-snz9.onrender.com', // Your deployed frontend URL
+    // You can add other origins here if needed, e.g., 'http://localhost:3000' for local frontend development
 ];
 
 app.use(cors({
     origin: function (origin, callback) {
         // Allow requests with no origin (like mobile apps, curl requests, or same-origin requests)
+        // This is important for some server-to-server or direct requests.
         if (!origin) return callback(null, true);
+
+        // Check if the requesting origin is in our allowed list
         if (allowedOrigins.indexOf(origin) === -1) {
-            const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+            const msg = `The CORS policy for this site does not allow access from the specified Origin: ${origin}`;
             return callback(new Error(msg), false);
         }
         return callback(null, true);
     },
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'], // Specify allowed HTTP methods
-    credentials: true, // Allow cookies to be sent
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'], // Explicitly allow necessary methods
+    credentials: true, // Allow cookies, authorization headers, etc. (if your app uses them)
 }));
 
 
